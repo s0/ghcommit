@@ -1,0 +1,60 @@
+{
+  "name": "ghcommit",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Directly change files on github using the github API, to support GPG signing",
+  "keywords": [
+    "actions",
+    "github",
+    "git",
+    "gpg"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Sam Lanning",
+    "url": "https://samlanning.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/s0/ghcommit.git"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
+    "format:fix": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint": "eslint . --max-warnings 0",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.7",
+    "@types/eslint": "^8.56.5",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.24",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jest": "^28.6.0",
+    "eslint-plugin-only-warn": "^1.1.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.0",
+    "tsup": "^8.1.0",
+    "typescript": "^5.3.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "packageManager": "pnpm@9.5.0",
+  "publishConfig": {
+    "access": "public"
+  }
+}
