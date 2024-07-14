@@ -36,7 +36,7 @@ jobs:
       - run: pnpm build
       - name: Configure PNPM to use token
         run:
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" >> .npmrc
       - name: Run Changeset Workflow
         uses: changesets/action@aba318e9165b45b7948c60273e0b72fce0a64eb9 # v1.4.7
         env:
