@@ -26,7 +26,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm codegen:github && tsup",
+    "build": "pnpm codegen:github && tsc --noEmit && tsup",
     "codegen:github": "graphql-codegen --config src/github/codegen.ts",
     "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
     "format:fix": "prettier --write \"**/*.{ts,tsx,md}\"",

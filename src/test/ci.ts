@@ -6,7 +6,6 @@ import * as path from "path";
 import { promises as fs } from "fs";
 import { getOctokit } from "@actions/github/lib/github";
 import pino from "pino";
-import { build as pinoPretty } from "pino-pretty";
 import { configDotenv } from "dotenv";
 
 import { commitFilesFromDirectory } from "../local";
