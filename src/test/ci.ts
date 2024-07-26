@@ -19,7 +19,9 @@ if (!GITHUB_TOKEN) {
 }
 
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
-if (!GITHUB_REPOSITORY) {
+
+const [owner, repository] = GITHUB_REPOSITORY?.split("/") || [];
+if (!owner || !repository) {
   throw new Error("GITHUB_REPOSITORY must be set");
 }
 
@@ -28,7 +30,12 @@ if (!HEAD_OID) {
   throw new Error("HEAD_OID must be set");
 }
 
-const log = pino(pinoPretty({}));
+const log = pino({
+  level: process.env.RUNNER_DEBUG === "1" ? "debug" : "info",
+  transport: {
+    target: "pino-pretty",
+  },
+});
 
 (async () => {
   // Create test directory
@@ -37,11 +44,15 @@ const log = pino(pinoPretty({}));
 
   const octokit = getOctokit(GITHUB_TOKEN);
 
+  // Create random test branch name
+  const branch = `test-branch-${Math.floor(Math.random() * 100000).toString(16)}`;
+
   await commitFilesFromDirectory({
     octokit,
-    repositoryNameWithOwner: GITHUB_REPOSITORY,
-    branch: "test-branch",
-    expectedHeadOid: HEAD_OID,
+    owner,
+    repository,
+    branch,
+    baseOid: HEAD_OID,
     message: {
       headline: "Test commit",
       body: "This is a test commit",
