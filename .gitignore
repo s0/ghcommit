@@ -16,8 +16,8 @@ node_modules
 coverage
 
 # Build Outputs
+generated
 dist
-
 
 # Debug
 npm-debug.log*

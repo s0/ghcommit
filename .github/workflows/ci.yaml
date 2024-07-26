@@ -1,6 +1,9 @@
 name: CI Checks
 on: pull_request
 
+permissions:
+  contents: write
+
 jobs:
   ci-checks:
     runs-on: ubuntu-latest
@@ -22,3 +25,7 @@ jobs:
       - run: pnpm build
       - run: pnpm lint
       - run: pnpm format:check
+      - run: pnpm test:ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_OID: ${{ github.base_ref }}
