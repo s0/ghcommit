@@ -1,6 +1,9 @@
 name: CI Checks
 on: pull_request
 
+permissions:
+  contents: write
+
 jobs:
   ci-checks:
     runs-on: ubuntu-latest

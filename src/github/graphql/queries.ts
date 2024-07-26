@@ -12,9 +12,14 @@ import {
 } from "./generated/operations";
 
 const GET_REPOSITORY_METADATA = /* GraphQL */ `
-  query getRepositoryMetadata($owner: String!, $name: String!) {
+  query getRepositoryMetadata($owner: String!, $name: String!, $ref: String!) {
     repository(owner: $owner, name: $name) {
       id
+      ref(qualifiedName: $ref) {
+        target {
+          oid
+        }
+      }
     }
   }
 `;

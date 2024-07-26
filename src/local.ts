@@ -26,7 +26,7 @@ export const commitFilesFromDirectory = async (args: {
   /**
    * The current commit that the target branch is at
    */
-  baseOid: string;
+  baseBranch: string;
   /**
    * The commit message
    */
@@ -46,12 +46,13 @@ export const commitFilesFromDirectory = async (args: {
     owner,
     repository,
     branch,
-    baseOid,
+    baseBranch,
     message,
     fileChanges,
     log,
   } = args;
   const repositoryNameWithOwner = `${owner}/${repository}`;
+  const baseRef = `refs/heads/${baseBranch}`;
 
   const additions: FileAddition[] = await Promise.all(
     (fileChanges.additions || []).map(async (p) => {
@@ -73,6 +74,7 @@ export const commitFilesFromDirectory = async (args: {
   const info = await getRepositoryMetadata(octokit, {
     owner: args.owner,
     name: args.repository,
+    ref: baseRef,
   });
   log?.debug(`Repo info: ${JSON.stringify(info, null, 2)}`);
 
@@ -80,12 +82,18 @@ export const commitFilesFromDirectory = async (args: {
     throw new Error(`Repository ${repositoryNameWithOwner} not found`);
   }
 
-  log?.debug(`Creating branch ${branch} from commit ${baseOid}}`);
+  const oid = info.ref?.target?.oid;
+
+  if (!info) {
+    throw new Error(`Ref ${baseRef} not found`);
+  }
+
+  log?.debug(`Creating branch ${branch} from commit ${oid}}`);
   const refId = await createRefMutation(octokit, {
     input: {
       repositoryId: info.id,
       name: `refs/heads/${branch}`,
-      oid: baseOid,
+      oid,
     },
   });
 
@@ -103,7 +111,7 @@ export const commitFilesFromDirectory = async (args: {
       branch: {
         id: refIdStr,
       },
-      expectedHeadOid: baseOid,
+      expectedHeadOid: oid,
       message,
       fileChanges: {
         additions,

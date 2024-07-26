@@ -24,11 +24,6 @@ if (!owner || !repository) {
   throw new Error("GITHUB_REPOSITORY must be set");
 }
 
-const HEAD_OID = process.env.HEAD_OID;
-if (!HEAD_OID) {
-  throw new Error("HEAD_OID must be set");
-}
-
 const log = pino({
   level: process.env.RUNNER_DEBUG === "1" ? "debug" : "info",
   transport: {
@@ -51,7 +46,7 @@ const log = pino({
     owner,
     repository,
     branch,
-    baseOid: HEAD_OID,
+    baseBranch: "main",
     message: {
       headline: "Test commit",
       body: "This is a test commit",
