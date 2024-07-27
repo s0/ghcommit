@@ -1,6 +1,6 @@
-import type { GitHub } from "@actions/github/lib/utils";
-
-export type GitHubClient = InstanceType<typeof GitHub>;
+export type GitHubClient = {
+  graphql: <T>(query: string, variables: any) => Promise<T>;
+};
 
 import type {
   CreateCommitOnBranchMutation,
