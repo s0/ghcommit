@@ -14,10 +14,15 @@ import type {
 } from "./generated/operations.js";
 
 const GET_REPOSITORY_METADATA = /* GraphQL */ `
-  query getRepositoryMetadata($owner: String!, $name: String!, $ref: String!) {
+  query getRepositoryMetadata(
+    $owner: String!
+    $name: String!
+    $baseRef: String!
+    $targetRef: String!
+  ) {
     repository(owner: $owner, name: $name) {
       id
-      ref(qualifiedName: $ref) {
+      baseRef: ref(qualifiedName: $baseRef) {
         id
         target {
           oid
@@ -26,6 +31,12 @@ const GET_REPOSITORY_METADATA = /* GraphQL */ `
               oid
             }
           }
+        }
+      }
+      targetBranch: ref(qualifiedName: $targetRef) {
+        id
+        target {
+          oid
         }
       }
     }
