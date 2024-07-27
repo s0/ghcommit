@@ -21,6 +21,11 @@ const GET_REPOSITORY_METADATA = /* GraphQL */ `
         id
         target {
           oid
+          ... on Tag {
+            target {
+              oid
+            }
+          }
         }
       }
     }

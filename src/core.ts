@@ -8,7 +8,10 @@ import {
   getRepositoryMetadata,
   GitHubClient,
 } from "./github/graphql/queries.js";
-import type { CreateCommitOnBranchMutationVariables } from "./github/graphql/generated/operations.js";
+import type {
+  CreateCommitOnBranchMutationVariables,
+  GetRepositoryMetadataQuery,
+} from "./github/graphql/generated/operations.js";
 import type { Logger } from "./logging.js";
 
 export type CommitFilesResult = {
@@ -53,6 +56,25 @@ const getBaseRef = (base: GitBase): string => {
   }
 };
 
+const getOidFromRef = (
+  base: GitBase,
+  ref: (GetRepositoryMetadataQuery["repository"] & Record<never, never>)["ref"],
+) => {
+  if ("commit" in base) {
+    return base.commit;
+  }
+
+  if (!ref?.target) {
+    throw new Error(`Could not determine oid from ref: ${JSON.stringify(ref)}`);
+  }
+
+  if ("target" in ref.target) {
+    return ref.target.target.oid;
+  }
+
+  return ref.target.oid;
+};
+
 export const commitFilesFromBase64 = async ({
   octokit,
   owner,
@@ -89,7 +111,7 @@ export const commitFilesFromBase64 = async ({
    * Used both to create / update the new branch (if necessary),
    * and th ensure no changes have been made as we push the new commit.
    */
-  const baseOid = "commit" in base ? base.commit : info.ref.target?.oid;
+  const baseOid = getOidFromRef(base, info.ref);
 
   let refId: string;
 
