@@ -26,13 +26,11 @@
     }
   },
   "scripts": {
-    "build": "pnpm codegen:github && tsc --noEmit && tsup",
+    "build": "rm -rf dist && pnpm codegen:github && tsc --noEmit && tsup",
     "codegen:github": "graphql-codegen --config src/github/codegen.ts",
     "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
     "format:fix": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint . --max-warnings 0",
-    "test": "jest",
-    "test:watch": "jest --watch",
     "test:integration": "jest --config jest.integration.config.cjs"
   },
   "devDependencies": {

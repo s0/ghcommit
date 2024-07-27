@@ -1,60 +1,34 @@
-/**
- * This file includes tests that will be run in CI.
- */
-import * as os from "os";
 import * as path from "path";
 import { promises as fs } from "fs";
-import { getOctokit } from "@actions/github/lib/github";
-import pino from "pino";
-import { configDotenv } from "dotenv";
+import { getOctokit } from "@actions/github/lib/github.js";
 
-import { commitFilesFromDirectory } from "../../fs";
-import { randomBytes } from "crypto";
+import { commitFilesFromDirectory } from "../../fs.js";
 import {
-  deleteRefMutation,
-  getRepositoryMetadata,
-} from "../../github/graphql/queries";
+  ENV,
+  REPO,
+  ROOT_TEMP_DIRECTORY,
+  ROOT_TEST_BRANCH_PREFIX,
+  log,
+} from "./env.js";
+import { deleteBranches } from "./util.js";
 
-configDotenv();
-
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-if (!GITHUB_TOKEN) {
-  throw new Error("GITHUB_TOKEN must be set");
-}
-
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
-
-const [owner, repository] = GITHUB_REPOSITORY?.split("/") || [];
-if (!owner || !repository) {
-  throw new Error("GITHUB_REPOSITORY must be set");
-}
-
-const log = pino({
-  level: process.env.RUNNER_DEBUG === "1" ? "debug" : "info",
-  transport: {
-    target: "pino-pretty",
-  },
-});
-
-const octokit = getOctokit(GITHUB_TOKEN);
-
-const TEST_BRANCH_PREFIX = `test-${randomBytes(4).toString("hex")}`;
+const octokit = getOctokit(ENV.GITHUB_TOKEN);
 
 const TEST_BRANCHES = {
-  COMMIT_FILE: `${TEST_BRANCH_PREFIX}-commit-file`,
+  COMMIT_FILE: `${ROOT_TEST_BRANCH_PREFIX}-fs-commit-file`,
 } as const;
 
 describe("fs", () => {
   describe("commitFilesFromDirectory", () => {
     it("should commit a file", async () => {
       // Create test directory
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "test-"));
+      await fs.mkdir(ROOT_TEMP_DIRECTORY, { recursive: true });
+      const tmpDir = await fs.mkdtemp(path.join(ROOT_TEMP_DIRECTORY, "test-"));
       await fs.writeFile(path.join(tmpDir, "foo.txt"), "Hello, world!");
 
       await commitFilesFromDirectory({
         octokit,
-        owner,
-        repository,
+        ...REPO,
         branch: TEST_BRANCHES.COMMIT_FILE,
         baseBranch: "main",
         message: {
@@ -73,31 +47,6 @@ describe("fs", () => {
   afterAll(async () => {
     console.info("Cleaning up test branches");
 
-    await Promise.all(
-      Object.values(TEST_BRANCHES).map(async (branch) => {
-        console.debug(`Deleting branch ${branch}`);
-        // Get Ref
-        const ref = await getRepositoryMetadata(octokit, {
-          owner,
-          name: repository,
-          ref: `refs/heads/${branch}`,
-        });
-
-        const refId = ref?.ref?.id;
-
-        if (!refId) {
-          console.warn(`Branch ${branch} not found`);
-          return;
-        }
-
-        await deleteRefMutation(octokit, {
-          input: {
-            refId,
-          },
-        });
-
-        console.debug(`Deleted branch ${branch}`);
-      }),
-    );
+    await deleteBranches(octokit, Object.values(TEST_BRANCHES));
   });
 });
