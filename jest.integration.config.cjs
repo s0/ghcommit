@@ -28,4 +28,5 @@ module.exports = {
     ROOT_TEST_BRANCH_PREFIX,
     ROOT_TEMP_DIRECTORY,
   },
+  globalTeardown: "<rootDir>/src/test/integration/jest.globalTeardown.ts",
 };
