@@ -11,7 +11,7 @@ import type {
   DeleteRefMutationVariables,
   GetRepositoryMetadataQuery,
   GetRepositoryMetadataQueryVariables,
-} from "./generated/operations";
+} from "./generated/operations.js";
 
 const GET_REPOSITORY_METADATA = /* GraphQL */ `
   query getRepositoryMetadata($owner: String!, $name: String!, $ref: String!) {

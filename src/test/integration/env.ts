@@ -1,5 +1,13 @@
-import pino from "pino";
+import { pino } from "pino";
 import { configDotenv } from "dotenv";
+
+declare namespace global {
+  const ROOT_TEST_BRANCH_PREFIX: string;
+  const ROOT_TEMP_DIRECTORY: string;
+}
+
+export const ROOT_TEST_BRANCH_PREFIX = global.ROOT_TEST_BRANCH_PREFIX;
+export const ROOT_TEMP_DIRECTORY = global.ROOT_TEMP_DIRECTORY;
 
 configDotenv();
 

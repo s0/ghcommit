@@ -1,8 +1,8 @@
 import { promises as fs } from "fs";
 import * as path from "path";
-import type { FileAddition } from "./github/graphql/generated/types";
-import { CommitFilesFromBase64Args, CommitFilesResult } from "./core";
-import { commitFilesFromBuffers } from "./node";
+import type { FileAddition } from "./github/graphql/generated/types.js";
+import { CommitFilesFromBase64Args, CommitFilesResult } from "./core.js";
+import { commitFilesFromBuffers } from "./node.js";
 
 export type CommitFilesFromDirectoryArgs = Omit<
   CommitFilesFromBase64Args,

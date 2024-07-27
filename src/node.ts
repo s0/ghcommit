@@ -2,7 +2,7 @@ import {
   commitFilesFromBase64,
   CommitFilesFromBase64Args,
   CommitFilesResult,
-} from "./core";
+} from "./core.js";
 
 export type CommitFilesFromBuffersArgs = Omit<
   CommitFilesFromBase64Args,

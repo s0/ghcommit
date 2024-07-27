@@ -1,15 +1,15 @@
 import type {
   CommitMessage,
   FileChanges,
-} from "./github/graphql/generated/types";
+} from "./github/graphql/generated/types.js";
 import {
   createCommitOnBranchQuery,
   createRefMutation,
   getRepositoryMetadata,
   GitHubClient,
-} from "./github/graphql/queries";
-import type { CreateCommitOnBranchMutationVariables } from "./github/graphql/generated/operations";
-import type { Logger } from "./logging";
+} from "./github/graphql/queries.js";
+import type { CreateCommitOnBranchMutationVariables } from "./github/graphql/generated/operations.js";
+import type { Logger } from "./logging.js";
 
 export type CommitFilesResult = {
   refId: string | null;

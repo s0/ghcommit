@@ -1,13 +1,12 @@
-import { getOctokit } from "@actions/github/lib/github";
+import { getOctokit } from "@actions/github/lib/github.js";
 
-import { randomBytes } from "crypto";
-import { ENV, REPO, log } from "./env";
-import { commitFilesFromBuffers } from "../../node";
-import { deleteBranches } from "./util";
+import { ENV, REPO, ROOT_TEST_BRANCH_PREFIX, log } from "./env.js";
+import { commitFilesFromBuffers } from "../../node.js";
+import { deleteBranches } from "./util.js";
 
 const octokit = getOctokit(ENV.GITHUB_TOKEN);
 
-const TEST_BRANCH_PREFIX = `test-node-${randomBytes(4).toString("hex")}`;
+const TEST_BRANCH_PREFIX = `${ROOT_TEST_BRANCH_PREFIX}-node`;
 
 describe("node", () => {
   const branches: string[] = [];

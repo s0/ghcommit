@@ -2,8 +2,8 @@ import {
   deleteRefMutation,
   getRepositoryMetadata,
   GitHubClient,
-} from "../../github/graphql/queries";
-import { REPO } from "./env";
+} from "../../github/graphql/queries.js";
+import { REPO } from "./env.js";
 
 export const deleteBranches = async (
   octokit: GitHubClient,
