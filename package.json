@@ -31,8 +31,6 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
     "format:fix": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint . --max-warnings 0",
-    "test": "jest",
-    "test:watch": "jest --watch",
     "test:integration": "jest --config jest.integration.config.cjs"
   },
   "devDependencies": {
