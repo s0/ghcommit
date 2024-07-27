@@ -1,44 +1,16 @@
-/**
- * This file includes tests that will be run in CI.
- */
 import * as os from "os";
 import * as path from "path";
 import { promises as fs } from "fs";
 import { getOctokit } from "@actions/github/lib/github";
-import pino from "pino";
-import { configDotenv } from "dotenv";
 
 import { commitFilesFromDirectory } from "../../fs";
 import { randomBytes } from "crypto";
-import {
-  deleteRefMutation,
-  getRepositoryMetadata,
-} from "../../github/graphql/queries";
+import { ENV, REPO, log } from "./env";
+import { deleteBranches } from "./util";
 
-configDotenv();
+const octokit = getOctokit(ENV.GITHUB_TOKEN);
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-if (!GITHUB_TOKEN) {
-  throw new Error("GITHUB_TOKEN must be set");
-}
-
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
-
-const [owner, repository] = GITHUB_REPOSITORY?.split("/") || [];
-if (!owner || !repository) {
-  throw new Error("GITHUB_REPOSITORY must be set");
-}
-
-const log = pino({
-  level: process.env.RUNNER_DEBUG === "1" ? "debug" : "info",
-  transport: {
-    target: "pino-pretty",
-  },
-});
-
-const octokit = getOctokit(GITHUB_TOKEN);
-
-const TEST_BRANCH_PREFIX = `test-${randomBytes(4).toString("hex")}`;
+const TEST_BRANCH_PREFIX = `test-fs-${randomBytes(4).toString("hex")}`;
 
 const TEST_BRANCHES = {
   COMMIT_FILE: `${TEST_BRANCH_PREFIX}-commit-file`,
@@ -53,8 +25,7 @@ describe("fs", () => {
 
       await commitFilesFromDirectory({
         octokit,
-        owner,
-        repository,
+        ...REPO,
         branch: TEST_BRANCHES.COMMIT_FILE,
         baseBranch: "main",
         message: {
@@ -73,31 +44,6 @@ describe("fs", () => {
   afterAll(async () => {
     console.info("Cleaning up test branches");
 
-    await Promise.all(
-      Object.values(TEST_BRANCHES).map(async (branch) => {
-        console.debug(`Deleting branch ${branch}`);
-        // Get Ref
-        const ref = await getRepositoryMetadata(octokit, {
-          owner,
-          name: repository,
-          ref: `refs/heads/${branch}`,
-        });
-
-        const refId = ref?.ref?.id;
-
-        if (!refId) {
-          console.warn(`Branch ${branch} not found`);
-          return;
-        }
-
-        await deleteRefMutation(octokit, {
-          input: {
-            refId,
-          },
-        });
-
-        console.debug(`Deleted branch ${branch}`);
-      }),
-    );
+    await deleteBranches(octokit, Object.values(TEST_BRANCHES));
   });
 });
