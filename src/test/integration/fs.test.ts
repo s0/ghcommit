@@ -30,7 +30,9 @@ describe("fs", () => {
         octokit,
         ...REPO,
         branch: TEST_BRANCHES.COMMIT_FILE,
-        baseBranch: "main",
+        base: {
+          branch: "main",
+        },
         message: {
           headline: "Test commit",
           body: "This is a test commit",

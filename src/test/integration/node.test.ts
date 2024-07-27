@@ -32,7 +32,9 @@ describe("node", () => {
             octokit,
             ...REPO,
             branch,
-            baseBranch: "main",
+            base: {
+              branch: "main",
+            },
             message: {
               headline: "Test commit",
               body: "This is a test commit",

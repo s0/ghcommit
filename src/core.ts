@@ -15,15 +15,26 @@ export type CommitFilesResult = {
   refId: string | null;
 };
 
+export type GitBase =
+  | {
+      branch: string;
+    }
+  | {
+      tag: string;
+    }
+  | {
+      commit: string;
+    };
+
 export type CommitFilesFromBase64Args = {
   octokit: GitHubClient;
   owner: string;
   repository: string;
   branch: string;
   /**
-   * The current commit that the target branch is at
+   * The current branch, tag or commit that the new branch should be based on.
    */
-  baseBranch: string;
+  base: GitBase;
   /**
    * The commit message
    */
@@ -32,18 +43,28 @@ export type CommitFilesFromBase64Args = {
   log?: Logger;
 };
 
+const getBaseRef = (base: GitBase): string => {
+  if ("branch" in base) {
+    return `refs/heads/${base.branch}`;
+  } else if ("tag" in base) {
+    return `refs/tags/${base.tag}`;
+  } else {
+    return "HEAD";
+  }
+};
+
 export const commitFilesFromBase64 = async ({
   octokit,
   owner,
   repository,
   branch,
-  baseBranch,
+  base,
   message,
   fileChanges,
   log,
 }: CommitFilesFromBase64Args): Promise<CommitFilesResult> => {
   const repositoryNameWithOwner = `${owner}/${repository}`;
-  const baseRef = `refs/heads/${baseBranch}`;
+  const baseRef = getBaseRef(base);
 
   log?.debug(`Getting repo info ${repositoryNameWithOwner}`);
   const info = await getRepositoryMetadata(octokit, {
@@ -57,36 +78,57 @@ export const commitFilesFromBase64 = async ({
     throw new Error(`Repository ${repositoryNameWithOwner} not found`);
   }
 
-  const oid = info.ref?.target?.oid;
-
-  if (!info) {
+  if (!info.ref) {
     throw new Error(`Ref ${baseRef} not found`);
   }
 
-  log?.debug(`Creating branch ${branch} from commit ${oid}}`);
-  const refId = await createRefMutation(octokit, {
-    input: {
-      repositoryId: info.id,
-      name: `refs/heads/${branch}`,
-      oid,
-    },
-  });
+  const repositoryId = info.id;
+  /**
+   * The commit oid to base the new commit on.
+   *
+   * Used both to create / update the new branch (if necessary),
+   * and th ensure no changes have been made as we push the new commit.
+   */
+  const baseOid = "commit" in base ? base.commit : info.ref.target?.oid;
 
-  log?.debug(`Created branch with refId ${JSON.stringify(refId, null, 2)}`);
+  let refId: string;
 
-  const refIdStr = refId.createRef?.ref?.id;
+  if ("branch" in base && base.branch === branch) {
+    log?.debug(`Committing to the same branch as base: ${branch} (${baseOid})`);
+    // Get existing branch refId
+    refId = info.ref.id;
+  } else {
+    // Create branch as not committing to same branch
+    // TODO: detect if branch already exists, and overwrite if so
+    log?.debug(`Creating branch ${branch} from commit ${baseOid}}`);
+    const refIdCreation = await createRefMutation(octokit, {
+      input: {
+        repositoryId,
+        name: `refs/heads/${branch}`,
+        oid: baseOid,
+      },
+    });
 
-  if (!refIdStr) {
-    throw new Error(`Failed to create branch ${branch}`);
+    log?.debug(
+      `Created branch with refId ${JSON.stringify(refIdCreation, null, 2)}`,
+    );
+
+    const refIdStr = refIdCreation.createRef?.ref?.id;
+
+    if (!refIdStr) {
+      throw new Error(`Failed to create branch ${branch}`);
+    }
+
+    refId = refIdStr;
   }
 
   await log?.debug(`Creating commit on branch ${branch}`);
   const createCommitMutation: CreateCommitOnBranchMutationVariables = {
     input: {
       branch: {
-        id: refIdStr,
+        id: refId,
       },
-      expectedHeadOid: oid,
+      expectedHeadOid: baseOid,
       message,
       fileChanges,
     },
