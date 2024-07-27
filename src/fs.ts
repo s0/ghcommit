@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import * as path from "path";
-import {
+import type {
   CommitMessage,
   FileAddition,
   FileDeletion,
@@ -11,8 +11,8 @@ import {
   getRepositoryMetadata,
   GitHubClient,
 } from "./github/graphql/queries";
-import { Logger } from "./logging";
-import { CreateCommitOnBranchMutationVariables } from "./github/graphql/generated/operations";
+import type { CreateCommitOnBranchMutationVariables } from "./github/graphql/generated/operations";
+import type { Logger } from "./logging";
 
 export const commitFilesFromDirectory = async (args: {
   octokit: GitHubClient;
