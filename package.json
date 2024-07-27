@@ -68,5 +68,8 @@
   "packageManager": "pnpm@9.5.0",
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "isomorphic-git": "^1.27.1"
   }
 }
