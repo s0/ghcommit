@@ -33,7 +33,7 @@
     "lint": "eslint . --max-warnings 0",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "ts-node src/test/ci"
+    "test:integration": "jest --config jest.integration.config.cjs"
   },
   "devDependencies": {
     "@actions/github": "^6.0.0",
