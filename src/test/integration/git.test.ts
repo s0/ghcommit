@@ -8,7 +8,7 @@ import {
   log,
 } from "./env";
 import { exec } from "child_process";
-import { getOctokit } from "@actions/github/lib/github.js";
+import { getOctokit } from "@actions/github";
 import { commitChangesFromRepo } from "../../git";
 import { getRefTreeQuery } from "../../github/graphql/queries";
 import { deleteBranches } from "./util";

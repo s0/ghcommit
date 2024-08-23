@@ -1,25 +1,17 @@
 import { promises as fs } from "fs";
 import git from "isomorphic-git";
-import { CommitFilesFromBase64Args } from "./core";
-import { commitFilesFromBuffers, CommitFilesFromBuffersArgs } from "./node";
-
-export type CommitChangesFromRepoArgs = Omit<
-  CommitFilesFromBase64Args,
-  "fileChanges" | "base"
-> & {
-  /**
-   * The root of the repository.
-   *
-   * @default process.cwd()
-   */
-  repoDirectory?: string;
-};
+import { commitFilesFromBuffers } from "./node";
+import {
+  CommitChangesFromRepoArgs,
+  CommitFilesFromBuffersArgs,
+  CommitFilesResult,
+} from "./interface";
 
 export const commitChangesFromRepo = async ({
   repoDirectory = process.cwd(),
   log,
   ...otherArgs
-}: CommitChangesFromRepoArgs) => {
+}: CommitChangesFromRepoArgs): Promise<CommitFilesResult> => {
   const gitLog = await git.log({
     fs,
     dir: repoDirectory,
