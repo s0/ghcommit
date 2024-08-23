@@ -73,15 +73,21 @@ describe("git", () => {
       const repoDirectory = path.join(testDir, "repo-1");
 
       // Clone the git repo locally usig the git cli and child-process
-      await new Promise<void>((resolve, reject) =>
-        exec(`git clone ${process.cwd()} repo-1`, { cwd: testDir }, (error) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        }),
-      );
+      await new Promise<void>((resolve, reject) => {
+        const p = exec(
+          `git clone ${process.cwd()} repo-1`,
+          { cwd: testDir },
+          (error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          },
+        );
+        p.stdout?.pipe(process.stdout);
+        p.stderr?.pipe(process.stderr);
+      });
 
       // Update an existing file
       await fs.promises.writeFile(
