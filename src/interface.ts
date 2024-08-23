@@ -52,6 +52,9 @@ export interface CommitFilesFromBase64Args
 
 export interface CommitFilesFromBuffersArgs
   extends CommitFilesSharedArgsWithBase {
+  /**
+   * The file changes, relative to the repository root, to make to the specified branch.
+   */
   fileChanges: {
     additions?: Array<{
       path: string;
@@ -61,7 +64,8 @@ export interface CommitFilesFromBuffersArgs
   };
 }
 
-export interface CommitFilesFromDirectoryArgs extends CommitFilesSharedArgsWithBase {
+export interface CommitFilesFromDirectoryArgs
+  extends CommitFilesSharedArgsWithBase {
   /**
    * The directory to consider the root of the repository when calculating
    * file paths

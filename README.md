@@ -47,7 +47,6 @@ All the functions below accept a single object as its argument, and share the fo
 
 <!-- TODO: point to some generated docs instead of including a code snippet -->
 
-
 ```ts
 {
   octokit: GitHubClient;
@@ -88,7 +87,7 @@ Example:
 
 ```ts
 import { getOctokit } from "@actions/github";
-import { commitChangesFromRepo } from '@s0/ghcommit/git';
+import { commitChangesFromRepo } from "@s0/ghcommit/git";
 
 const octokit = getOctokit(process.env.GITHUB_TOKEN);
 
@@ -96,25 +95,25 @@ const octokit = getOctokit(process.env.GITHUB_TOKEN);
 // e.g. if you're just using @ations/checkout
 await commitChangesFromRepo({
   octokit,
-  owner: 'my-org',
-  repository: 'my-repo',
-  branch: 'new-branch-to-create',
+  owner: "my-org",
+  repository: "my-repo",
+  branch: "new-branch-to-create",
   message: {
-    headline: '[chore] do something'
-  }
+    headline: "[chore] do something",
+  },
 });
 
 // Commit & push the files from ta specific directory
 // where we've cloned a repo, and made changes to files
 await commitChangesFromRepo({
   octokit,
-  owner: 'my-org',
-  repository: 'my-repo',
-  branch: 'another-new-branch-to-create',
+  owner: "my-org",
+  repository: "my-repo",
+  branch: "another-new-branch-to-create",
   message: {
-    headline: '[chore] do something else'
+    headline: "[chore] do something else",
   },
-  repoDirectory: '/tmp/some-repo'
+  repoDirectory: "/tmp/some-repo",
 });
 ```
 
@@ -126,6 +125,10 @@ In addition to `CommitFilesBasedArgs`, this function has the following arguments
 
 ```ts
 {
+  /**
+   * The current branch, tag or commit that the new branch should be based on.
+   */
+  base: GitBase;
   /**
    * The directory to consider the root of the repository when calculating
    * file paths
@@ -148,34 +151,104 @@ Example:
 
 ```ts
 import { getOctokit } from "@actions/github";
-import { commitFilesFromDirectory } from '@s0/ghcommit/fs';
+import { commitFilesFromDirectory } from "@s0/ghcommit/fs";
 
 const octokit = getOctokit(process.env.GITHUB_TOKEN);
 
 // Commit the changes to package.json and package-lock.json
+// based on the main branch
 await commitFilesFromDirectory({
   octokit,
-  owner: 'my-org',
-  repository: 'my-repo',
-  branch: 'new-branch-to-create',
+  owner: "my-org",
+  repository: "my-repo",
+  branch: "new-branch-to-create",
   message: {
-    headline: '[chore] do something'
+    headline: "[chore] do something",
   },
   base: {
     branch: "main",
   },
-  workingDirectory: 'foo/bar',
+  workingDirectory: "foo/bar",
   fileChanges: {
-    additions: ['package-lock.json', 'package.json']
-  }
+    additions: ["package-lock.json", "package.json"],
+  },
+});
+
+// Push just the index.html file to a new branch called docs, based off the tag v1.0.0
+await commitFilesFromDirectory({
+  octokit,
+  owner: "my-org",
+  repository: "my-repo",
+  branch: "docs",
+  message: {
+    headline: "[chore] do something",
+  },
+  force: true, // Overwrite any existing branch
+  base: {
+    tag: "v1.0.0",
+  },
+  workingDirectory: "some-dir",
+  fileChanges: {
+    additions: ["index.html"],
+  },
 });
 ```
 
+### `commitFilesFromBuffers`
 
+This function will add or delete specific files from a repository's branch based on Node.js `Buffers` that can be any binary data in memory. This is useful for when you want to make changes to a repository / branch without cloning a repo or interacting with a filesystem.
 
-### Pushing locally changed files
+In addition to `CommitFilesBasedArgs`, this function has the following arguments:
 
-If you are working with a locally cloned GitHub repo, and want to push the changes to the files you have made locally (for example when running )
+```ts
+{
+  /**
+   * The current branch, tag or commit that the new branch should be based on.
+   */
+  base: GitBase;
+  /**
+   * The file changes, relative to the repository root, to make to the specified branch.
+   */
+  fileChanges: {
+    additions?: Array<{
+      path: string;
+      contents: Buffer;
+    }>;
+    deletions?: string[];
+  };
+}
+```
+
+Example:
+
+```ts
+import { getOctokit } from "@actions/github";
+import { commitFilesFromBuffers } from "@s0/ghcommit/node";
+
+const octokit = getOctokit(process.env.GITHUB_TOKEN);
+
+// Add a file called hello-world
+await commitFilesFromBuffers({
+  octokit,
+  owner: "my-org",
+  repository: "my-repo",
+  branch: "new-branch-to-create",
+  message: {
+    headline: "[chore] do something",
+  },
+  base: {
+    branch: "main",
+  },
+  fileChanges: {
+    additions: [
+      {
+        path: "hello/world.txt",
+        contents: Buffer.alloc(1024, "Hello, world!"),
+      },
+    ],
+  },
+});
+```
 
 ## Other Tools / Alternatives
 
