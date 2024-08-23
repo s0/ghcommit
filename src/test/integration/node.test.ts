@@ -21,6 +21,8 @@ const TEST_TARGET_COMMIT = "fce2760017eab6d85388ed5cfdfac171559d80b3";
 const TEST_TARGET_COMMIT_2 = "7ba8473f02849de3b5449b25fc83c5245d338d94";
 const TEST_TARGET_TREE_2 = "95c9ea756f3686614dcdc1c42f7f654b684cdac2";
 
+const BASIC_FILE_CHANGES_PATH = "foo.txt";
+const BASIC_FILE_CHANGES_OID = "0e23339619d605319ec4b49a0ac9dd94598eff8e";
 const BASIC_FILE_CONTENTS = {
   message: {
     headline: "Test commit",
@@ -29,7 +31,7 @@ const BASIC_FILE_CONTENTS = {
   fileChanges: {
     additions: [
       {
-        path: `foo.txt`,
+        path: BASIC_FILE_CHANGES_PATH,
         contents: Buffer.alloc(1024, "Hello, world!"),
       },
     ],
@@ -50,21 +52,36 @@ describe("node", () => {
 
   const expectBranchHasTree = async ({
     branch,
-    oid,
+    treeOid,
+    file,
   }: {
     branch: string;
-    oid: string;
+    treeOid?: string;
+    file?: {
+      path: string;
+      oid: string;
+    };
   }) => {
     const ref = (
       await getRefTreeQuery(octokit, {
         owner: REPO.owner,
         name: REPO.repository,
         ref: `refs/heads/${branch}`,
+        path: file?.path ?? "package.json",
       })
     ).repository?.ref?.target;
 
-    if (ref && "tree" in ref) {
-      expect(ref.tree.oid).toEqual(oid);
+    if (!ref) {
+      throw new Error("Unexpected missing ref");
+    }
+
+    if ("tree" in ref) {
+      if (treeOid) {
+        expect(ref.tree.oid).toEqual(treeOid);
+      }
+      if (file) {
+        expect(ref.file?.oid).toEqual(file.oid);
+      }
     } else {
       throw new Error("Expected ref to have a tree");
     }
@@ -88,19 +105,22 @@ describe("node", () => {
       const SIZES_BYTES = {
         "1KiB": {
           sizeBytes: 1024,
-          tree: "547dfe4079b53c3b45a6717ac1ed6d98512f0a1c",
+          treeOid: "547dfe4079b53c3b45a6717ac1ed6d98512f0a1c",
+          fileOid: "0e23339619d605319ec4b49a0ac9dd94598eff8e",
         },
         "1MiB": {
           sizeBytes: 1024 * 1024,
-          tree: "a6dca57388cf08de146bcc01a2113b218d6c2858",
+          treeOid: "a6dca57388cf08de146bcc01a2113b218d6c2858",
+          fileOid: "a1d7fed1b4a8de1b665dc4f604015b2d87ef978f",
         },
         "10MiB": {
           sizeBytes: 1024 * 1024 * 10,
-          tree: "c4788256a2c1e3ea4267cff0502a656d992248ec",
+          treeOid: "c4788256a2c1e3ea4267cff0502a656d992248ec",
+          fileOid: "e36e74edbb6d3fc181ef584a50f8ee55585d27cc",
         },
       };
 
-      for (const [sizeName, { sizeBytes, tree }] of Object.entries(
+      for (const [sizeName, { sizeBytes, treeOid, fileOid }] of Object.entries(
         SIZES_BYTES,
       )) {
         it(`Can commit a ${sizeName}`, async () => {
@@ -132,7 +152,11 @@ describe("node", () => {
 
           await expectBranchHasTree({
             branch,
-            oid: tree,
+            treeOid,
+            file: {
+              path: `${sizeName}.txt`,
+              oid: fileOid,
+            },
           });
         });
       }
@@ -153,7 +177,13 @@ describe("node", () => {
       });
 
       // Don't test tree for this one as it will change over time / be unstable
-      // TODO: Get the oid of the specific files, and test that
+      await expectBranchHasTree({
+        branch,
+        file: {
+          path: BASIC_FILE_CHANGES_PATH,
+          oid: BASIC_FILE_CHANGES_OID,
+        },
+      });
     });
 
     it("can commit using tag as a base", async () => {
@@ -171,7 +201,13 @@ describe("node", () => {
       });
 
       // Don't test tree for this one as it will change over time / be unstable
-      // TODO: Get the oid of the specific files, and test that
+      await expectBranchHasTree({
+        branch,
+        file: {
+          path: BASIC_FILE_CHANGES_PATH,
+          oid: BASIC_FILE_CHANGES_OID,
+        },
+      });
     });
 
     it("can commit using commit as a base", async () => {
@@ -190,7 +226,11 @@ describe("node", () => {
 
       await expectBranchHasTree({
         branch,
-        oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+        treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+        file: {
+          path: BASIC_FILE_CHANGES_PATH,
+          oid: BASIC_FILE_CHANGES_OID,
+        },
       });
     });
 
@@ -221,7 +261,11 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          file: {
+            path: BASIC_FILE_CHANGES_PATH,
+            oid: BASIC_FILE_CHANGES_OID,
+          },
         });
       });
 
@@ -254,7 +298,7 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          oid: TEST_TARGET_TREE_2,
+          treeOid: TEST_TARGET_TREE_2,
         });
       });
 
@@ -283,7 +327,11 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          file: {
+            path: BASIC_FILE_CHANGES_PATH,
+            oid: BASIC_FILE_CHANGES_OID,
+          },
         });
       });
 
@@ -312,7 +360,11 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          file: {
+            path: BASIC_FILE_CHANGES_PATH,
+            oid: BASIC_FILE_CHANGES_OID,
+          },
         });
       });
     });

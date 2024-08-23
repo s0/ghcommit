@@ -87,12 +87,20 @@ const CREATE_COMMIT_ON_BRANCH = /* GraphQL */ `
 
 /** For tests only */
 const GET_REF_TREE = /* GraphQL */ `
-  query getRefTree($owner: String!, $name: String!, $ref: String!) {
+  query getRefTree(
+    $owner: String!
+    $name: String!
+    $ref: String!
+    $path: String!
+  ) {
     repository(owner: $owner, name: $name) {
       ref(qualifiedName: $ref) {
         target {
           ... on Commit {
             tree {
+              oid
+            }
+            file(path: $path) {
               oid
             }
           }
