@@ -1,4 +1,4 @@
-import { getOctokit } from "@actions/github/lib/github.js";
+import { getOctokit } from "@actions/github";
 
 import { ENV, REPO, ROOT_TEST_BRANCH_PREFIX, log } from "./env.js";
 import { commitFilesFromBuffers } from "../../node.js";

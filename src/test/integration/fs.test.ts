@@ -1,6 +1,6 @@
 import * as path from "path";
 import { promises as fs } from "fs";
-import { getOctokit } from "@actions/github/lib/github.js";
+import { getOctokit } from "@actions/github";
 
 import { commitFilesFromDirectory } from "../../fs.js";
 import {
