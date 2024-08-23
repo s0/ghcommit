@@ -9,6 +9,8 @@ import type {
   CreateRefMutationVariables,
   DeleteRefMutation,
   DeleteRefMutationVariables,
+  GetRefTreeQuery,
+  GetRefTreeQueryVariables,
   GetRepositoryMetadataQuery,
   GetRepositoryMetadataQueryVariables,
   UpdateRefMutation,
@@ -83,6 +85,31 @@ const CREATE_COMMIT_ON_BRANCH = /* GraphQL */ `
   }
 `;
 
+/** For tests only */
+const GET_REF_TREE = /* GraphQL */ `
+  query getRefTree(
+    $owner: String!
+    $name: String!
+    $ref: String!
+    $path: String!
+  ) {
+    repository(owner: $owner, name: $name) {
+      ref(qualifiedName: $ref) {
+        target {
+          ... on Commit {
+            tree {
+              oid
+            }
+            file(path: $path) {
+              oid
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const getRepositoryMetadata = async (
   o: GitHubClient,
   v: GetRepositoryMetadataQueryVariables,
@@ -117,3 +144,8 @@ export const createCommitOnBranchQuery = async (
   v: CreateCommitOnBranchMutationVariables,
 ): Promise<CreateCommitOnBranchMutation> =>
   o.graphql<CreateCommitOnBranchMutation>(CREATE_COMMIT_ON_BRANCH, v);
+
+export const getRefTreeQuery = async (
+  o: GitHubClient,
+  v: GetRefTreeQueryVariables,
+): Promise<GetRefTreeQuery> => o.graphql<GetRefTreeQuery>(GET_REF_TREE, v);
