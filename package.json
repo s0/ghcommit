@@ -23,6 +23,26 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core.mjs",
+      "require": "./dist/core.js",
+      "types": "./dist/core.d.ts"
+    },
+    "./fs": {
+      "import": "./dist/fs.mjs",
+      "require": "./dist/fs.js",
+      "types": "./dist/fs.d.ts"
+    },
+    "./git": {
+      "import": "./dist/git.mjs",
+      "require": "./dist/git.js",
+      "types": "./dist/git.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node.mjs",
+      "require": "./dist/node.js",
+      "types": "./dist/node.d.ts"
     }
   },
   "scripts": {
