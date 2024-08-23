@@ -6,6 +6,7 @@ export default defineConfig({
     "src/core.ts",
     "src/git.ts",
     "src/fs.ts",
+    "src/interfaces.ts",
     "src/node.ts",
   ],
   format: ["cjs", "esm"],

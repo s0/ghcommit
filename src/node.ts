@@ -1,21 +1,5 @@
-import {
-  commitFilesFromBase64,
-  CommitFilesFromBase64Args,
-  CommitFilesResult,
-} from "./core.js";
-
-export type CommitFilesFromBuffersArgs = Omit<
-  CommitFilesFromBase64Args,
-  "fileChanges"
-> & {
-  fileChanges: {
-    additions?: Array<{
-      path: string;
-      contents: Buffer;
-    }>;
-    deletions?: string[];
-  };
-};
+import { commitFilesFromBase64 } from "./core.js";
+import { CommitFilesFromBuffersArgs, CommitFilesResult } from "./interface.js";
 
 export const commitFilesFromBuffers = async ({
   fileChanges,

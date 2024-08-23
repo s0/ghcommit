@@ -1,56 +1,18 @@
-import type {
-  CommitMessage,
-  FileChanges,
-} from "./github/graphql/generated/types.js";
 import {
   createCommitOnBranchQuery,
   createRefMutation,
   getRepositoryMetadata,
-  GitHubClient,
   updateRefMutation,
 } from "./github/graphql/queries.js";
 import type {
   CreateCommitOnBranchMutationVariables,
   GetRepositoryMetadataQuery,
 } from "./github/graphql/generated/operations.js";
-import type { Logger } from "./logging.js";
-
-export type CommitFilesResult = {
-  refId: string | null;
-};
-
-export type GitBase =
-  | {
-      branch: string;
-    }
-  | {
-      tag: string;
-    }
-  | {
-      commit: string;
-    };
-
-export type CommitFilesFromBase64Args = {
-  octokit: GitHubClient;
-  owner: string;
-  repository: string;
-  branch: string;
-  /**
-   * The current branch, tag or commit that the new branch should be based on.
-   */
-  base: GitBase;
-  /**
-   * Push the commit even if the branch exists and does not match what was
-   * specified as the base.
-   */
-  force?: boolean;
-  /**
-   * The commit message
-   */
-  message: CommitMessage;
-  fileChanges: FileChanges;
-  log?: Logger;
-};
+import {
+  CommitFilesFromBase64Args,
+  CommitFilesResult,
+  GitBase,
+} from "./interface.js";
 
 const getBaseRef = (base: GitBase): string => {
   if ("branch" in base) {

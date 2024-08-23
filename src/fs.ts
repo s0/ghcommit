@@ -1,23 +1,11 @@
 import { promises as fs } from "fs";
 import * as path from "path";
 import type { FileAddition } from "./github/graphql/generated/types.js";
-import { CommitFilesFromBase64Args, CommitFilesResult } from "./core.js";
 import { commitFilesFromBuffers } from "./node.js";
-
-export type CommitFilesFromDirectoryArgs = Omit<
-  CommitFilesFromBase64Args,
-  "fileChanges"
-> & {
-  /**
-   * The directory to consider the root of the repository when calculating
-   * file paths
-   */
-  workingDirectory?: string;
-  fileChanges: {
-    additions?: string[];
-    deletions?: string[];
-  };
-};
+import {
+  CommitFilesFromDirectoryArgs,
+  CommitFilesResult,
+} from "./interface.js";
 
 export const commitFilesFromDirectory = async ({
   workingDirectory = process.cwd(),
