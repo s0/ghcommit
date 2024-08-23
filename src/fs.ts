@@ -3,7 +3,6 @@ import * as path from "path";
 import type { FileAddition } from "./github/graphql/generated/types.js";
 import { CommitFilesFromBase64Args, CommitFilesResult } from "./core.js";
 import { commitFilesFromBuffers } from "./node.js";
-import git from "isomorphic-git";
 
 export type CommitFilesFromDirectoryArgs = Omit<
   CommitFilesFromBase64Args,
@@ -42,6 +41,3 @@ export const commitFilesFromDirectory = async ({
     },
   });
 };
-
-// TODO: remove
-export { git };
