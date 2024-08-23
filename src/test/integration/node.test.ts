@@ -5,6 +5,7 @@ import { commitFilesFromBuffers } from "../../node.js";
 import { deleteBranches } from "./util.js";
 import {
   createRefMutation,
+  getRefTreeQuery,
   getRepositoryMetadata,
 } from "../../github/graphql/queries.js";
 
@@ -12,30 +13,62 @@ const octokit = getOctokit(ENV.GITHUB_TOKEN);
 
 const TEST_BRANCH_PREFIX = `${ROOT_TEST_BRANCH_PREFIX}-node`;
 
+const TEST_TARGET_COMMIT = "fce2760017eab6d85388ed5cfdfac171559d80b3";
+/**
+ * For tests, important that this commit is not an ancestor of TEST_TARGET_COMMIT,
+ * to ensure that non-fast-forward pushes are tested
+ */
+const TEST_TARGET_COMMIT_2 = "7ba8473f02849de3b5449b25fc83c5245d338d94";
+const TEST_TARGET_TREE_2 = "95c9ea756f3686614dcdc1c42f7f654b684cdac2";
+
+const BASIC_FILE_CONTENTS = {
+  message: {
+    headline: "Test commit",
+    body: "This is a test commit",
+  },
+  fileChanges: {
+    additions: [
+      {
+        path: `foo.txt`,
+        contents: Buffer.alloc(1024, "Hello, world!"),
+      },
+    ],
+  },
+  log,
+};
+
+const TEST_TARGET_TREE_WITH_BASIC_CHANGES =
+  "a3431c9b42b71115c52bc6fbf9da3682cf0ed5e8";
+
 describe("node", () => {
   const branches: string[] = [];
 
   // Set timeout to 1 minute
   jest.setTimeout(60 * 1000);
 
-  const contents = Buffer.alloc(1024, "Hello, world!");
-  const BASIC_FILE_CONTENTS = {
-    message: {
-      headline: "Test commit",
-      body: "This is a test commit",
-    },
-    fileChanges: {
-      additions: [
-        {
-          path: `foo.txt`,
-          contents,
-        },
-      ],
-    },
-    log,
-  };
-
   let repositoryId: string;
+
+  const expectBranchHasTree = async ({
+    branch,
+    oid,
+  }: {
+    branch: string;
+    oid: string;
+  }) => {
+    const ref = (
+      await getRefTreeQuery(octokit, {
+        owner: REPO.owner,
+        name: REPO.repository,
+        ref: `refs/heads/${branch}`,
+      })
+    ).repository?.ref?.target;
+
+    if (ref && "tree" in ref) {
+      expect(ref.tree.oid).toEqual(oid);
+    } else {
+      throw new Error("Expected ref to have a tree");
+    }
+  };
 
   beforeAll(async () => {
     const response = await getRepositoryMetadata(octokit, {
@@ -53,12 +86,23 @@ describe("node", () => {
   describe("commitFilesFromBuffers", () => {
     describe("can commit single file of various sizes", () => {
       const SIZES_BYTES = {
-        "1KiB": 1024,
-        "1MiB": 1024 * 1024,
-        "10MiB": 1024 * 1024 * 10,
+        "1KiB": {
+          sizeBytes: 1024,
+          tree: "547dfe4079b53c3b45a6717ac1ed6d98512f0a1c",
+        },
+        "1MiB": {
+          sizeBytes: 1024 * 1024,
+          tree: "a6dca57388cf08de146bcc01a2113b218d6c2858",
+        },
+        "10MiB": {
+          sizeBytes: 1024 * 1024 * 10,
+          tree: "c4788256a2c1e3ea4267cff0502a656d992248ec",
+        },
       };
 
-      for (const [sizeName, sizeBytes] of Object.entries(SIZES_BYTES)) {
+      for (const [sizeName, { sizeBytes, tree }] of Object.entries(
+        SIZES_BYTES,
+      )) {
         it(`Can commit a ${sizeName}`, async () => {
           const branch = `${TEST_BRANCH_PREFIX}-${sizeName}`;
           branches.push(branch);
@@ -69,7 +113,7 @@ describe("node", () => {
             ...REPO,
             branch,
             base: {
-              branch: "main",
+              commit: TEST_TARGET_COMMIT,
             },
             message: {
               headline: "Test commit",
@@ -85,8 +129,31 @@ describe("node", () => {
             },
             log,
           });
+
+          await expectBranchHasTree({
+            branch,
+            oid: tree,
+          });
         });
       }
+    });
+
+    it("can commit using branch as a base", async () => {
+      const branch = `${TEST_BRANCH_PREFIX}-branch-base`;
+      branches.push(branch);
+
+      await commitFilesFromBuffers({
+        octokit,
+        ...REPO,
+        branch,
+        base: {
+          branch: "main",
+        },
+        ...BASIC_FILE_CONTENTS,
+      });
+
+      // Don't test tree for this one as it will change over time / be unstable
+      // TODO: Get the oid of the specific files, and test that
     });
 
     it("can commit using tag as a base", async () => {
@@ -102,6 +169,9 @@ describe("node", () => {
         },
         ...BASIC_FILE_CONTENTS,
       });
+
+      // Don't test tree for this one as it will change over time / be unstable
+      // TODO: Get the oid of the specific files, and test that
     });
 
     it("can commit using commit as a base", async () => {
@@ -113,9 +183,14 @@ describe("node", () => {
         ...REPO,
         branch,
         base: {
-          commit: "fce2760017eab6d85388ed5cfdfac171559d80b3",
+          commit: TEST_TARGET_COMMIT,
         },
         ...BASIC_FILE_CONTENTS,
+      });
+
+      await expectBranchHasTree({
+        branch,
+        oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
       });
     });
 
@@ -129,7 +204,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: "31ded45f25a07726e02fd111d4c230718b49fa2a",
+            oid: TEST_TARGET_COMMIT_2,
           },
         });
 
@@ -138,10 +213,15 @@ describe("node", () => {
           ...REPO,
           branch,
           base: {
-            commit: "fce2760017eab6d85388ed5cfdfac171559d80b3",
+            commit: TEST_TARGET_COMMIT,
           },
           ...BASIC_FILE_CONTENTS,
           force: true,
+        });
+
+        await expectBranchHasTree({
+          branch,
+          oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
         });
       });
 
@@ -154,7 +234,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: "31ded45f25a07726e02fd111d4c230718b49fa2a",
+            oid: TEST_TARGET_COMMIT_2,
           },
         });
 
@@ -164,13 +244,18 @@ describe("node", () => {
             ...REPO,
             branch,
             base: {
-              commit: "fce2760017eab6d85388ed5cfdfac171559d80b3",
+              commit: TEST_TARGET_COMMIT,
             },
             ...BASIC_FILE_CONTENTS,
           }),
         ).rejects.toThrow(
           `Branch ${branch} exists already and does not match base`,
         );
+
+        await expectBranchHasTree({
+          branch,
+          oid: TEST_TARGET_TREE_2,
+        });
       });
 
       it("can commit to existing branch when force is false and target matches base", async () => {
@@ -182,7 +267,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: "31ded45f25a07726e02fd111d4c230718b49fa2a",
+            oid: TEST_TARGET_COMMIT,
           },
         });
 
@@ -191,9 +276,14 @@ describe("node", () => {
           ...REPO,
           branch,
           base: {
-            commit: "31ded45f25a07726e02fd111d4c230718b49fa2a",
+            commit: TEST_TARGET_COMMIT,
           },
           ...BASIC_FILE_CONTENTS,
+        });
+
+        await expectBranchHasTree({
+          branch,
+          oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
         });
       });
 
@@ -206,7 +296,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: "31ded45f25a07726e02fd111d4c230718b49fa2a",
+            oid: TEST_TARGET_COMMIT,
           },
         });
 
@@ -218,6 +308,11 @@ describe("node", () => {
             branch,
           },
           ...BASIC_FILE_CONTENTS,
+        });
+
+        await expectBranchHasTree({
+          branch,
+          oid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
         });
       });
     });

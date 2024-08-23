@@ -142,6 +142,7 @@ export const commitFilesFromBase64 = async ({
             input: {
               refId: info.targetBranch.id,
               oid: baseOid,
+              force: true,
             },
           });
 
