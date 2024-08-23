@@ -20,18 +20,10 @@ export const commitChangesFromRepo = async ({
   log,
   ...otherArgs
 }: CommitChangesFromRepoArgs) => {
-  const currentBranch = await git.currentBranch({ fs, dir: repoDirectory });
-
-  if (!currentBranch) {
-    throw new Error("Could not determine current branch");
-  }
-
-  log?.error(`Determining changes files for branch: ${currentBranch}`);
-
   const gitLog = await git.log({
     fs,
     dir: repoDirectory,
-    ref: currentBranch,
+    ref: "HEAD",
     depth: 1,
   });
 
