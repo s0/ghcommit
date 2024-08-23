@@ -11,6 +11,8 @@ import type {
   DeleteRefMutationVariables,
   GetRepositoryMetadataQuery,
   GetRepositoryMetadataQueryVariables,
+  UpdateRefMutation,
+  UpdateRefMutationVariables,
 } from "./generated/operations.js";
 
 const GET_REPOSITORY_METADATA = /* GraphQL */ `
@@ -53,6 +55,16 @@ const CREATE_REF = /* GraphQL */ `
   }
 `;
 
+const UPDATE_REF = /* GraphQL */ `
+  mutation updateRef($input: UpdateRefInput!) {
+    updateRef(input: $input) {
+      ref {
+        id
+      }
+    }
+  }
+`;
+
 const DELETE_REF = /* GraphQL */ `
   mutation deleteRef($input: DeleteRefInput!) {
     deleteRef(input: $input) {
@@ -87,6 +99,12 @@ export const createRefMutation = async (
   v: CreateRefMutationVariables,
 ): Promise<CreateRefMutation> =>
   await o.graphql<CreateRefMutation>(CREATE_REF, v);
+
+export const updateRefMutation = async (
+  o: GitHubClient,
+  v: UpdateRefMutationVariables,
+): Promise<UpdateRefMutation> =>
+  await o.graphql<UpdateRefMutation>(UPDATE_REF, v);
 
 export const deleteRefMutation = async (
   o: GitHubClient,
