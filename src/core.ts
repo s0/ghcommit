@@ -7,6 +7,7 @@ import {
   createRefMutation,
   getRepositoryMetadata,
   GitHubClient,
+  updateRefMutation,
 } from "./github/graphql/queries.js";
 import type {
   CreateCommitOnBranchMutationVariables,
@@ -39,6 +40,11 @@ export type CommitFilesFromBase64Args = {
    */
   base: GitBase;
   /**
+   * Push the commit even if the branch exists and does not match what was
+   * specified as the base.
+   */
+  force?: boolean;
+  /**
    * The commit message
    */
   message: CommitMessage;
@@ -58,7 +64,8 @@ const getBaseRef = (base: GitBase): string => {
 
 const getOidFromRef = (
   base: GitBase,
-  ref: (GetRepositoryMetadataQuery["repository"] & Record<never, never>)["ref"],
+  ref: (GetRepositoryMetadataQuery["repository"] &
+    Record<never, never>)["baseRef"],
 ) => {
   if ("commit" in base) {
     return base.commit;
@@ -81,18 +88,21 @@ export const commitFilesFromBase64 = async ({
   repository,
   branch,
   base,
+  force = false,
   message,
   fileChanges,
   log,
 }: CommitFilesFromBase64Args): Promise<CommitFilesResult> => {
   const repositoryNameWithOwner = `${owner}/${repository}`;
   const baseRef = getBaseRef(base);
+  const targetRef = `refs/heads/${branch}`;
 
   log?.debug(`Getting repo info ${repositoryNameWithOwner}`);
   const info = await getRepositoryMetadata(octokit, {
     owner,
     name: repository,
-    ref: baseRef,
+    baseRef,
+    targetRef,
   });
   log?.debug(`Repo info: ${JSON.stringify(info, null, 2)}`);
 
@@ -100,7 +110,7 @@ export const commitFilesFromBase64 = async ({
     throw new Error(`Repository ${repositoryNameWithOwner} not found`);
   }
 
-  if (!info.ref) {
+  if (!info.baseRef) {
     throw new Error(`Ref ${baseRef} not found`);
   }
 
@@ -109,39 +119,77 @@ export const commitFilesFromBase64 = async ({
    * The commit oid to base the new commit on.
    *
    * Used both to create / update the new branch (if necessary),
-   * and th ensure no changes have been made as we push the new commit.
+   * and to ensure no changes have been made as we push the new commit.
    */
-  const baseOid = getOidFromRef(base, info.ref);
+  const baseOid = getOidFromRef(base, info.baseRef);
 
   let refId: string;
 
   if ("branch" in base && base.branch === branch) {
     log?.debug(`Committing to the same branch as base: ${branch} (${baseOid})`);
     // Get existing branch refId
-    refId = info.ref.id;
+    refId = info.baseRef.id;
   } else {
-    // Create branch as not committing to same branch
-    // TODO: detect if branch already exists, and overwrite if so
-    log?.debug(`Creating branch ${branch} from commit ${baseOid}}`);
-    const refIdCreation = await createRefMutation(octokit, {
-      input: {
-        repositoryId,
-        name: `refs/heads/${branch}`,
-        oid: baseOid,
-      },
-    });
+    // Determine if the branch needs to be created or not
+    if (info.targetBranch?.target?.oid) {
+      // Branch already exists, check if it matches the base
+      if (info.targetBranch.target.oid !== baseOid) {
+        if (force) {
+          log?.debug(
+            `Branch ${branch} exists but does not match base ${baseOid}, forcing update to base`,
+          );
+          const refIdUpdate = await updateRefMutation(octokit, {
+            input: {
+              refId: info.targetBranch.id,
+              oid: baseOid,
+            },
+          });
 
-    log?.debug(
-      `Created branch with refId ${JSON.stringify(refIdCreation, null, 2)}`,
-    );
+          log?.debug(
+            `Updated branch with refId ${JSON.stringify(refIdUpdate, null, 2)}`,
+          );
 
-    const refIdStr = refIdCreation.createRef?.ref?.id;
+          const refIdStr = refIdUpdate.updateRef?.ref?.id;
 
-    if (!refIdStr) {
-      throw new Error(`Failed to create branch ${branch}`);
+          if (!refIdStr) {
+            throw new Error(`Failed to create branch ${branch}`);
+          }
+
+          refId = refIdStr;
+        } else {
+          throw new Error(
+            `Branch ${branch} exists already and does not match base ${baseOid}, force is set to false`,
+          );
+        }
+      } else {
+        log?.debug(
+          `Branch ${branch} already exists and matches base ${baseOid}`,
+        );
+        refId = info.targetBranch.id;
+      }
+    } else {
+      // Create branch as it does not exist yet
+      log?.debug(`Creating branch ${branch} from commit ${baseOid}}`);
+      const refIdCreation = await createRefMutation(octokit, {
+        input: {
+          repositoryId,
+          name: `refs/heads/${branch}`,
+          oid: baseOid,
+        },
+      });
+
+      log?.debug(
+        `Created branch with refId ${JSON.stringify(refIdCreation, null, 2)}`,
+      );
+
+      const refIdStr = refIdCreation.createRef?.ref?.id;
+
+      if (!refIdStr) {
+        throw new Error(`Failed to create branch ${branch}`);
+      }
+
+      refId = refIdStr;
     }
-
-    refId = refIdStr;
   }
 
   await log?.debug(`Creating commit on branch ${branch}`);

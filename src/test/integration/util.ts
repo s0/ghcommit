@@ -16,10 +16,11 @@ export const deleteBranches = async (
       const ref = await getRepositoryMetadata(octokit, {
         owner: REPO.owner,
         name: REPO.repository,
-        ref: `refs/heads/${branch}`,
+        baseRef: `refs/heads/${branch}`,
+        targetRef: `refs/heads/${branch}`,
       });
 
-      const refId = ref?.ref?.id;
+      const refId = ref?.baseRef?.id;
 
       if (!refId) {
         console.warn(`Branch ${branch} not found`);

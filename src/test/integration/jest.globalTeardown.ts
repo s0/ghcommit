@@ -8,5 +8,7 @@ module.exports = async (_: unknown, projectConfig: Config) => {
   }
   console.log(`Deleting directory: ${directory}`);
 
-  await fs.rm(directory, { recursive: true });
+  await fs.rm(directory, { recursive: true }).catch((err) => {
+    console.error(`Error deleting directory: ${err}`);
+  });
 };
