@@ -1,5 +1,9 @@
 name: CI Checks
-on: pull_request
+on: 
+  pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
