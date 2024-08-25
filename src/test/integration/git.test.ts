@@ -159,6 +159,7 @@ describe("git", () => {
 
     it("should correctly commit all changes", async () => {
       const branch = `${TEST_BRANCH_PREFIX}-multiple-changes`;
+      branches.push(branch);
 
       await fs.promises.mkdir(testDir, { recursive: true });
       const repoDirectory = path.join(testDir, "repo-1");
@@ -213,6 +214,7 @@ describe("git", () => {
 
     it("should correctly be able to base changes off specific commit", async () => {
       const branch = `${TEST_BRANCH_PREFIX}-specific-base`;
+      branches.push(branch);
 
       await fs.promises.mkdir(testDir, { recursive: true });
       const repoDirectory = path.join(testDir, "repo-2");
