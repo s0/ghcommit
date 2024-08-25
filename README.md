@@ -75,6 +75,14 @@ In addition to `CommitFilesBasedArgs`, this function has the following arguments
 ```ts
 {
   /**
+   * The base commit to build your changes on-top of
+   *
+   * @default HEAD
+   */
+  base?: {
+    commit: string;
+  };
+  /**
    * The root of the repository.
    *
    * @default process.cwd()
@@ -86,7 +94,7 @@ In addition to `CommitFilesBasedArgs`, this function has the following arguments
 Example:
 
 ```ts
-import { getOctokit } from "@actions/github";
+import { context, getOctokit } from "@actions/github";
 import { commitChangesFromRepo } from "@s0/ghcommit/git";
 
 const octokit = getOctokit(process.env.GITHUB_TOKEN);
@@ -103,7 +111,7 @@ await commitChangesFromRepo({
   },
 });
 
-// Commit & push the files from ta specific directory
+// Commit & push the files from a specific directory
 // where we've cloned a repo, and made changes to files
 await commitChangesFromRepo({
   octokit,
@@ -114,6 +122,23 @@ await commitChangesFromRepo({
     headline: "[chore] do something else",
   },
   repoDirectory: "/tmp/some-repo",
+});
+
+// Commit & push the files from the current directory,
+// but ensure changes from any locally-made commits are also included
+await commitChangesFromRepo({
+  octokit,
+  owner: "my-org",
+  repository: "my-repo",
+  branch: "another-new-branch-to-create",
+  message: {
+    headline: "[chore] do something else",
+  },
+  base: {
+    // This will be the original sha from the workflow run,
+    // even if we've made commits locally
+    commit: context.sha,
+  },
 });
 ```
 
