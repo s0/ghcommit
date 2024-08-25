@@ -6,16 +6,24 @@ NPM / TypeScript package to commit changes GitHub repositories using the GraphQL
 
 ## Why?
 
-If you or your organisation has strict requirements
-around requiring signed commits (i.e. via Branch Protection or Repo Rulesets), then this can make integrating CI workflows or applications that are designed to make changes to your repos quite difficult. This is because you will need to manage your own GPG keys, assign them to machine accounts (which also means it doesn't work with GitHub Apps), and securely manage and rotate them.
+- **Simplified GPG Signing:**
 
-Instead of doing this, if you use the GitHub API to make changes to files (such as what happens when making changes to files directly in the web UI), then GitHub's internal GPG key is used, and commits are all signed and associated with the user of the access token that was used.
+  If you or your organisation has strict requirements
+  around requiring signed commits (i.e. via Branch Protection or Repo Rulesets), then this can make integrating CI workflows or applications that are designed to make changes to your repos quite difficult. This is because you will need to manage your own GPG keys, assign them to machine accounts (which also means it doesn't work with GitHub Apps), and securely manage and rotate them.
 
-(And this also works with GitHub Apps too, including the GitHub Actions app).
+  Instead of doing this, if you use the GitHub API to make changes to files (such as what happens when making changes to files directly in the web UI), then GitHub's internal GPG key is used, and commits are all signed and associated with the user of the access token that was used.
 
-![](docs/verified.png)
+  (And this also works with GitHub Apps too, including the GitHub Actions app).
 
-This library has primarily been designed for use in custom Node GitHub Actions, but can be used in any Node.js or JavaScript project that needs to directly modify files in GitHub repositories.
+  ![](docs/verified.png)
+
+  This library has primarily been designed for use in custom Node GitHub Actions, but can be used in any Node.js or JavaScript project that needs to directly modify files in GitHub repositories.
+
+- **Simplified Git Config:**
+
+  When performing git actions via the GitHub API, all actions are always attributed to the actor whose `GITHUB_TOKEN` is being used (whether an app, or user), and this information is reflected in the git committer and author. As such, it's no longer necessary (or even possible) to specify the commit author (name and email address).
+
+  This simplifies the process of preparing your workflows for pushing changes, as you no longer need to configure the name and email address in git, and ensure they appropriately match any GPG keys used.
 
 ## Usage
 
