@@ -69,7 +69,7 @@ All the functions below accept a single object as its argument, and share the fo
   /**
    * The commit message
    */
-  message: CommitMessage;
+  message: string | CommitMessage;
   log?: Logger;
 }
 ```
@@ -113,9 +113,7 @@ await commitChangesFromRepo({
   octokit,
   ...context.repo,
   branch: "new-branch-to-create",
-  message: {
-    headline: "[chore] do something",
-  },
+  message: "[chore] do something",
 });
 
 // Commit & push the files from a specific directory
@@ -125,9 +123,7 @@ await commitChangesFromRepo({
   owner: "my-org",
   repository: "my-repo",
   branch: "another-new-branch-to-create",
-  message: {
-    headline: "[chore] do something else",
-  },
+  message: "[chore] do something else\n\nsome more details",
   repoDirectory: "/tmp/some-repo",
 });
 
@@ -139,6 +135,7 @@ await commitChangesFromRepo({
   branch: "another-new-branch-to-create",
   message: {
     headline: "[chore] do something else",
+    body: "some more details",
   },
   base: {
     // This will be the original sha from the workflow run,
@@ -192,9 +189,7 @@ await commitFilesFromDirectory({
   octokit,
   ...context.repo,
   branch: "new-branch-to-create",
-  message: {
-    headline: "[chore] do something",
-  },
+  message: "[chore] do something",
   base: {
     branch: "main",
   },
@@ -209,9 +204,7 @@ await commitFilesFromDirectory({
   octokit,
   ...context.repo,
   branch: "docs",
-  message: {
-    headline: "[chore] do something",
-  },
+  message: "[chore] do something",
   force: true, // Overwrite any existing branch
   base: {
     tag: "v1.0.0",
@@ -261,9 +254,7 @@ await commitFilesFromBuffers({
   octokit,
   ...context.repo,
   branch: "new-branch-to-create",
-  message: {
-    headline: "[chore] do something",
-  },
+  message: "[chore] do something",
   base: {
     branch: "main",
   },

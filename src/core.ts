@@ -13,6 +13,7 @@ import {
   CommitFilesResult,
   GitBase,
 } from "./interface.js";
+import { CommitMessage } from "./github/graphql/generated/types.js";
 
 const getBaseRef = (base: GitBase): string => {
   if ("branch" in base) {
@@ -161,6 +162,14 @@ export const commitFilesFromBase64 = async ({
     }
   }
 
+  const finalMessage: CommitMessage =
+    typeof message === "string"
+      ? {
+          headline: message.split("\n")[0]?.trim() ?? "",
+          body: message.split("\n").slice(1).join("\n").trim(),
+        }
+      : message;
+
   await log?.debug(`Creating commit on branch ${branch}`);
   const createCommitMutation: CreateCommitOnBranchMutationVariables = {
     input: {
@@ -168,7 +177,7 @@ export const commitFilesFromBase64 = async ({
         id: refId,
       },
       expectedHeadOid: baseOid,
-      message,
+      message: finalMessage,
       fileChanges,
     },
   };

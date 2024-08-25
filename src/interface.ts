@@ -36,7 +36,7 @@ export interface CommitFilesBasedArgs {
   /**
    * The commit message
    */
-  message: CommitMessage;
+  message: string | CommitMessage;
   log?: Logger;
 }
 

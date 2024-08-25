@@ -105,6 +105,7 @@ const GET_REF_TREE = /* GraphQL */ `
                 oid
               }
             }
+            message
             file(path: $path) {
               oid
             }
