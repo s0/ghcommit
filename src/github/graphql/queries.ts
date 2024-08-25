@@ -100,6 +100,11 @@ const GET_REF_TREE = /* GraphQL */ `
             tree {
               oid
             }
+            parents(first: 10) {
+              nodes {
+                oid
+              }
+            }
             file(path: $path) {
               oid
             }

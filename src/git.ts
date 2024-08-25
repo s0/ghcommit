@@ -8,21 +8,23 @@ import {
 } from "./interface";
 
 export const commitChangesFromRepo = async ({
+  base,
   repoDirectory = process.cwd(),
   log,
   ...otherArgs
 }: CommitChangesFromRepoArgs): Promise<CommitFilesResult> => {
+  const ref = base?.commit ?? "HEAD";
   const gitLog = await git.log({
     fs,
     dir: repoDirectory,
-    ref: "HEAD",
+    ref,
     depth: 1,
   });
 
   const oid = gitLog[0]?.oid;
 
   if (!oid) {
-    throw new Error("Could not determine oid for current branch");
+    throw new Error(`Could not determine oid for ${ref}`);
   }
 
   // Determine changed files

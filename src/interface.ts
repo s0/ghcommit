@@ -85,6 +85,24 @@ export interface CommitFilesFromDirectoryArgs
 
 export interface CommitChangesFromRepoArgs extends CommitFilesBasedArgs {
   /**
+   * The base commit to build your changes on-top of.
+   *
+   * By default, this commit will be the HEAD of the local repository,
+   * meaning that if any commits have been made locally and not pushed,
+   * this command will fail.
+   *
+   * To include all changes, this should be set to a commit that is known
+   * to be in the remote repository (such as the default branch).
+   *
+   * If you want to base the changes on a different commit to one checked out,
+   * make sure that you also pull this commit from the remote.
+   *
+   * @default HEAD
+   */
+  base?: {
+    commit: string;
+  };
+  /**
    * The root of the repository.
    *
    * @default process.cwd()
