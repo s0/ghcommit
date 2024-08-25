@@ -30,8 +30,7 @@ const expectBranchHasFile = async ({
   if (oid === null) {
     expect(() =>
       getRefTreeQuery(octokit, {
-        owner: REPO.owner,
-        name: REPO.repository,
+        ...REPO,
         ref: `refs/heads/${branch}`,
         path,
       }),
@@ -40,8 +39,7 @@ const expectBranchHasFile = async ({
   }
   const ref = (
     await getRefTreeQuery(octokit, {
-      owner: REPO.owner,
-      name: REPO.repository,
+      ...REPO,
       ref: `refs/heads/${branch}`,
       path,
     })
@@ -67,8 +65,7 @@ const expectParentHasOid = async ({
 }) => {
   const commit = (
     await getRefTreeQuery(octokit, {
-      owner: REPO.owner,
-      name: REPO.repository,
+      ...REPO,
       ref: `refs/heads/${branch}`,
       path: "README.md",
     })

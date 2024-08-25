@@ -24,7 +24,9 @@ export type GitBase =
 export interface CommitFilesBasedArgs {
   octokit: GitHubClient;
   owner: string;
-  repository: string;
+  repo?: string;
+  /** @deprecated use {@link repo} instead */
+  repository?: string;
   branch: string;
   /**
    * Push the commit even if the branch exists and does not match what was

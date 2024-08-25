@@ -70,8 +70,7 @@ describe("node", () => {
   }) => {
     const ref = (
       await getRefTreeQuery(octokit, {
-        owner: REPO.owner,
-        name: REPO.repository,
+        ...REPO,
         ref: `refs/heads/${branch}`,
         path: file?.path ?? "package.json",
       })
@@ -103,8 +102,7 @@ describe("node", () => {
 
   beforeAll(async () => {
     const response = await getRepositoryMetadata(octokit, {
-      owner: REPO.owner,
-      name: REPO.repository,
+      ...REPO,
       baseRef: "HEAD",
       targetRef: "HEAD",
     });

@@ -20,11 +20,11 @@ import type {
 const GET_REPOSITORY_METADATA = /* GraphQL */ `
   query getRepositoryMetadata(
     $owner: String!
-    $name: String!
+    $repo: String!
     $baseRef: String!
     $targetRef: String!
   ) {
-    repository(owner: $owner, name: $name) {
+    repository(owner: $owner, name: $repo) {
       id
       baseRef: ref(qualifiedName: $baseRef) {
         id
@@ -89,11 +89,11 @@ const CREATE_COMMIT_ON_BRANCH = /* GraphQL */ `
 const GET_REF_TREE = /* GraphQL */ `
   query getRefTree(
     $owner: String!
-    $name: String!
+    $repo: String!
     $ref: String!
     $path: String!
   ) {
-    repository(owner: $owner, name: $name) {
+    repository(owner: $owner, name: $repo) {
       ref(qualifiedName: $ref) {
         target {
           ... on Commit {

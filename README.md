@@ -59,7 +59,7 @@ All the functions below accept a single object as its argument, and share the fo
 {
   octokit: GitHubClient;
   owner: string;
-  repository: string;
+  repo: string;
   branch: string;
   /**
    * Push the commit even if the branch exists and does not match what was
@@ -111,8 +111,7 @@ const octokit = getOctokit(process.env.GITHUB_TOKEN);
 // e.g. if you're just using @ations/checkout
 await commitChangesFromRepo({
   octokit,
-  owner: "my-org",
-  repository: "my-repo",
+  ...context.repo,
   branch: "new-branch-to-create",
   message: {
     headline: "[chore] do something",
@@ -136,8 +135,7 @@ await commitChangesFromRepo({
 // but ensure changes from any locally-made commits are also included
 await commitChangesFromRepo({
   octokit,
-  owner: "my-org",
-  repository: "my-repo",
+  ...context.repo,
   branch: "another-new-branch-to-create",
   message: {
     headline: "[chore] do something else",
@@ -183,7 +181,7 @@ In addition to `CommitFilesBasedArgs`, this function has the following arguments
 Example:
 
 ```ts
-import { getOctokit } from "@actions/github";
+import { context, getOctokit } from "@actions/github";
 import { commitFilesFromDirectory } from "@s0/ghcommit/fs";
 
 const octokit = getOctokit(process.env.GITHUB_TOKEN);
@@ -192,8 +190,7 @@ const octokit = getOctokit(process.env.GITHUB_TOKEN);
 // based on the main branch
 await commitFilesFromDirectory({
   octokit,
-  owner: "my-org",
-  repository: "my-repo",
+  ...context.repo,
   branch: "new-branch-to-create",
   message: {
     headline: "[chore] do something",
@@ -210,8 +207,7 @@ await commitFilesFromDirectory({
 // Push just the index.html file to a new branch called docs, based off the tag v1.0.0
 await commitFilesFromDirectory({
   octokit,
-  owner: "my-org",
-  repository: "my-repo",
+  ...context.repo,
   branch: "docs",
   message: {
     headline: "[chore] do something",
@@ -255,7 +251,7 @@ In addition to `CommitFilesBasedArgs`, this function has the following arguments
 Example:
 
 ```ts
-import { getOctokit } from "@actions/github";
+import { context, getOctokit } from "@actions/github";
 import { commitFilesFromBuffers } from "@s0/ghcommit/node";
 
 const octokit = getOctokit(process.env.GITHUB_TOKEN);
@@ -263,8 +259,7 @@ const octokit = getOctokit(process.env.GITHUB_TOKEN);
 // Add a file called hello-world
 await commitFilesFromBuffers({
   octokit,
-  owner: "my-org",
-  repository: "my-repo",
+  ...context.repo,
   branch: "new-branch-to-create",
   message: {
     headline: "[chore] do something",
