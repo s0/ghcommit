@@ -1,3 +1,4 @@
+import { promises as fs } from "fs";
 import { getOctokit } from "@actions/github";
 
 import { ENV, REPO, ROOT_TEST_BRANCH_PREFIX, log } from "./env.js";
@@ -8,18 +9,23 @@ import {
   getRefTreeQuery,
   getRepositoryMetadata,
 } from "../../github/graphql/queries.js";
+import git from "isomorphic-git";
+
+// TODO: re-enable strict tree tests when GitHub have addressed the createRef
+// bug that's currently used in integration tests
+// See: https://github.com/orgs/community/discussions/136777
 
 const octokit = getOctokit(ENV.GITHUB_TOKEN);
 
 const TEST_BRANCH_PREFIX = `${ROOT_TEST_BRANCH_PREFIX}-node`;
 
-const TEST_TARGET_COMMIT = "fce2760017eab6d85388ed5cfdfac171559d80b3";
+// const TEST_TARGET_COMMIT = "fce2760017eab6d85388ed5cfdfac171559d80b3";
 /**
  * For tests, important that this commit is not an ancestor of TEST_TARGET_COMMIT,
  * to ensure that non-fast-forward pushes are tested
  */
-const TEST_TARGET_COMMIT_2 = "7ba8473f02849de3b5449b25fc83c5245d338d94";
-const TEST_TARGET_TREE_2 = "95c9ea756f3686614dcdc1c42f7f654b684cdac2";
+// const TEST_TARGET_COMMIT_2 = "7ba8473f02849de3b5449b25fc83c5245d338d94";
+// const TEST_TARGET_TREE_2 = "95c9ea756f3686614dcdc1c42f7f654b684cdac2";
 
 const BASIC_FILE_CHANGES_PATH = "foo.txt";
 const BASIC_FILE_CHANGES_OID = "0e23339619d605319ec4b49a0ac9dd94598eff8e";
@@ -39,8 +45,8 @@ const BASIC_FILE_CONTENTS = {
   log,
 };
 
-const TEST_TARGET_TREE_WITH_BASIC_CHANGES =
-  "a3431c9b42b71115c52bc6fbf9da3682cf0ed5e8";
+// const TEST_TARGET_TREE_WITH_BASIC_CHANGES =
+//   "a3431c9b42b71115c52bc6fbf9da3682cf0ed5e8";
 
 describe("node", () => {
   const branches: string[] = [];
@@ -87,6 +93,14 @@ describe("node", () => {
     }
   };
 
+  let testTargetCommit: string;
+  /**
+   * For tests, important that this commit is not an ancestor of TEST_TARGET_COMMIT,
+   * to ensure that non-fast-forward pushes are tested
+   */
+  let testTargetCommit2: string;
+  let testTargetTree2: string;
+
   beforeAll(async () => {
     const response = await getRepositoryMetadata(octokit, {
       owner: REPO.owner,
@@ -98,6 +112,12 @@ describe("node", () => {
       throw new Error("Repository not found");
     }
     repositoryId = response.id;
+
+    // Get recent 2 commits to perform tests on
+    const log = await git.log({ fs, dir: process.cwd(), depth: 2 });
+    testTargetCommit = log[1]?.oid ?? "N/A";
+    testTargetCommit2 = log[0]?.oid ?? "N/A";
+    testTargetTree2 = log[0]?.commit.tree ?? "N/A";
   });
 
   describe("commitFilesFromBuffers", () => {
@@ -120,7 +140,7 @@ describe("node", () => {
         },
       };
 
-      for (const [sizeName, { sizeBytes, treeOid, fileOid }] of Object.entries(
+      for (const [sizeName, { sizeBytes, fileOid }] of Object.entries(
         SIZES_BYTES,
       )) {
         it(`Can commit a ${sizeName}`, async () => {
@@ -133,7 +153,7 @@ describe("node", () => {
             ...REPO,
             branch,
             base: {
-              commit: TEST_TARGET_COMMIT,
+              commit: testTargetCommit,
             },
             message: {
               headline: "Test commit",
@@ -152,7 +172,8 @@ describe("node", () => {
 
           await expectBranchHasTree({
             branch,
-            treeOid,
+            // TODO: re-enable
+            // treeOid,
             file: {
               path: `${sizeName}.txt`,
               oid: fileOid,
@@ -219,14 +240,15 @@ describe("node", () => {
         ...REPO,
         branch,
         base: {
-          commit: TEST_TARGET_COMMIT,
+          commit: testTargetCommit,
         },
         ...BASIC_FILE_CONTENTS,
       });
 
       await expectBranchHasTree({
         branch,
-        treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+        // TODO: re-enable
+        // treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
         file: {
           path: BASIC_FILE_CHANGES_PATH,
           oid: BASIC_FILE_CHANGES_OID,
@@ -244,7 +266,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: TEST_TARGET_COMMIT_2,
+            oid: testTargetCommit2,
           },
         });
 
@@ -253,7 +275,7 @@ describe("node", () => {
           ...REPO,
           branch,
           base: {
-            commit: TEST_TARGET_COMMIT,
+            commit: testTargetCommit,
           },
           ...BASIC_FILE_CONTENTS,
           force: true,
@@ -261,7 +283,8 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          // TODO: re-enable
+          // treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
           file: {
             path: BASIC_FILE_CHANGES_PATH,
             oid: BASIC_FILE_CHANGES_OID,
@@ -278,7 +301,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: TEST_TARGET_COMMIT_2,
+            oid: testTargetCommit2,
           },
         });
 
@@ -288,7 +311,7 @@ describe("node", () => {
             ...REPO,
             branch,
             base: {
-              commit: TEST_TARGET_COMMIT,
+              commit: testTargetCommit,
             },
             ...BASIC_FILE_CONTENTS,
           }),
@@ -298,7 +321,7 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          treeOid: TEST_TARGET_TREE_2,
+          treeOid: testTargetTree2,
         });
       });
 
@@ -311,7 +334,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: TEST_TARGET_COMMIT,
+            oid: testTargetCommit,
           },
         });
 
@@ -320,14 +343,15 @@ describe("node", () => {
           ...REPO,
           branch,
           base: {
-            commit: TEST_TARGET_COMMIT,
+            commit: testTargetCommit,
           },
           ...BASIC_FILE_CONTENTS,
         });
 
         await expectBranchHasTree({
           branch,
-          treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          // TODO: re-enable
+          // treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
           file: {
             path: BASIC_FILE_CHANGES_PATH,
             oid: BASIC_FILE_CHANGES_OID,
@@ -344,7 +368,7 @@ describe("node", () => {
           input: {
             repositoryId,
             name: `refs/heads/${branch}`,
-            oid: TEST_TARGET_COMMIT,
+            oid: testTargetCommit,
           },
         });
 
@@ -360,7 +384,8 @@ describe("node", () => {
 
         await expectBranchHasTree({
           branch,
-          treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
+          // TODO: re-enable
+          // treeOid: TEST_TARGET_TREE_WITH_BASIC_CHANGES,
           file: {
             path: BASIC_FILE_CHANGES_PATH,
             oid: BASIC_FILE_CHANGES_OID,
