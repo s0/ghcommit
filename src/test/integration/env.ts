@@ -18,8 +18,8 @@ if (!GITHUB_TOKEN) {
 
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 
-const [owner, repository] = GITHUB_REPOSITORY?.split("/") || [];
-if (!owner || !repository) {
+const [owner, repo] = GITHUB_REPOSITORY?.split("/") || [];
+if (!owner || !repo) {
   throw new Error("GITHUB_REPOSITORY must be set");
 }
 
@@ -27,7 +27,7 @@ export const ENV = {
   GITHUB_TOKEN,
 };
 
-export const REPO = { owner, repository };
+export const REPO = { owner, repo };
 
 export const log = pino({
   level: process.env.RUNNER_DEBUG === "1" ? "debug" : "info",

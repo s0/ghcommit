@@ -13,6 +13,7 @@ import {
   CommitFilesResult,
   GitBase,
 } from "./interface.js";
+import { CommitMessage } from "./github/graphql/generated/types.js";
 
 const getBaseRef = (base: GitBase): string => {
   if ("branch" in base) {
@@ -47,6 +48,7 @@ const getOidFromRef = (
 export const commitFilesFromBase64 = async ({
   octokit,
   owner,
+  repo,
   repository,
   branch,
   base,
@@ -58,11 +60,16 @@ export const commitFilesFromBase64 = async ({
   const repositoryNameWithOwner = `${owner}/${repository}`;
   const baseRef = getBaseRef(base);
   const targetRef = `refs/heads/${branch}`;
+  repo = repo ?? repository;
+
+  if (!repo) {
+    throw new Error(`Argument 'repo' must be provided`);
+  }
 
   log?.debug(`Getting repo info ${repositoryNameWithOwner}`);
   const info = await getRepositoryMetadata(octokit, {
     owner,
-    name: repository,
+    repo,
     baseRef,
     targetRef,
   });
@@ -155,6 +162,14 @@ export const commitFilesFromBase64 = async ({
     }
   }
 
+  const finalMessage: CommitMessage =
+    typeof message === "string"
+      ? {
+          headline: message.split("\n")[0]?.trim() ?? "",
+          body: message.split("\n").slice(1).join("\n").trim(),
+        }
+      : message;
+
   await log?.debug(`Creating commit on branch ${branch}`);
   const createCommitMutation: CreateCommitOnBranchMutationVariables = {
     input: {
@@ -162,7 +177,7 @@ export const commitFilesFromBase64 = async ({
         id: refId,
       },
       expectedHeadOid: baseOid,
-      message,
+      message: finalMessage,
       fileChanges,
     },
   };
