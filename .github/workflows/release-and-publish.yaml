@@ -38,7 +38,7 @@ jobs:
         run:
           echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" >> .npmrc
       - name: Run Changeset Workflow
-        uses: changesets/action@aba318e9165b45b7948c60273e0b72fce0a64eb9 # v1.4.7
+        uses: s0/changesets-action@63d3e3fda2c00696414ca2d6683e046289c13fd8 # v2.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
