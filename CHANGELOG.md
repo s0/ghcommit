@@ -1,5 +1,11 @@
 # @s0/ghcommit
 
+## 1.1.0
+
+### Minor Changes
+
+- 642fb77: Allow for base commit to be specified with commitChangesFromRepo
+
 ## 1.0.0
 
 ### Major Changes
