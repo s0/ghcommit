@@ -7,7 +7,7 @@ import {
   ROOT_TEST_BRANCH_PREFIX,
   log,
 } from "./env";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { getOctokit } from "@actions/github";
 import { commitChangesFromRepo } from "../../git";
 import { getRefTreeQuery } from "../../github/graphql/queries";
@@ -163,8 +163,9 @@ describe("git", () => {
 
       // Clone the git repo locally using the git cli and child-process
       await new Promise<void>((resolve, reject) => {
-        const p = exec(
-          `git clone ${process.cwd()} repo-1`,
+        const p = execFile(
+          "git",
+          ["clone", process.cwd(), "repo-1"],
           { cwd: testDir },
           (error) => {
             if (error) {
@@ -218,8 +219,9 @@ describe("git", () => {
 
       // Clone the git repo locally usig the git cli and child-process
       await new Promise<void>((resolve, reject) => {
-        const p = exec(
-          `git clone ${process.cwd()} repo-2`,
+        const p = execFile(
+          "git",
+          ["clone", process.cwd(), "repo-2"],
           { cwd: testDir },
           (error) => {
             if (error) {
