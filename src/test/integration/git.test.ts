@@ -30,8 +30,7 @@ const expectBranchHasFile = async ({
   if (oid === null) {
     expect(() =>
       getRefTreeQuery(octokit, {
-        owner: REPO.owner,
-        name: REPO.repository,
+        ...REPO,
         ref: `refs/heads/${branch}`,
         path,
       }),
@@ -40,8 +39,7 @@ const expectBranchHasFile = async ({
   }
   const ref = (
     await getRefTreeQuery(octokit, {
-      owner: REPO.owner,
-      name: REPO.repository,
+      ...REPO,
       ref: `refs/heads/${branch}`,
       path,
     })
@@ -67,8 +65,7 @@ const expectParentHasOid = async ({
 }) => {
   const commit = (
     await getRefTreeQuery(octokit, {
-      owner: REPO.owner,
-      name: REPO.repository,
+      ...REPO,
       ref: `refs/heads/${branch}`,
       path: "README.md",
     })
@@ -159,6 +156,7 @@ describe("git", () => {
 
     it("should correctly commit all changes", async () => {
       const branch = `${TEST_BRANCH_PREFIX}-multiple-changes`;
+      branches.push(branch);
 
       await fs.promises.mkdir(testDir, { recursive: true });
       const repoDirectory = path.join(testDir, "repo-1");
@@ -214,6 +212,7 @@ describe("git", () => {
 
     it("should correctly be able to base changes off specific commit", async () => {
       const branch = `${TEST_BRANCH_PREFIX}-specific-base`;
+      branches.push(branch);
 
       await fs.promises.mkdir(testDir, { recursive: true });
       const repoDirectory = path.join(testDir, "repo-2");

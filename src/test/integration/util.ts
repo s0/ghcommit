@@ -14,8 +14,7 @@ export const deleteBranches = async (
       console.debug(`Deleting branch ${branch}`);
       // Get Ref
       const ref = await getRepositoryMetadata(octokit, {
-        owner: REPO.owner,
-        name: REPO.repository,
+        ...REPO,
         baseRef: `refs/heads/${branch}`,
         targetRef: `refs/heads/${branch}`,
       });
