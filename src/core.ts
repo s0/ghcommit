@@ -79,10 +79,6 @@ export const commitFilesFromBase64 = async ({
     throw new Error(`Repository ${repositoryNameWithOwner} not found`);
   }
 
-  if (!info.baseRef) {
-    throw new Error(`Ref ${baseRef} not found`);
-  }
-
   const repositoryId = info.id;
   /**
    * The commit oid to base the new commit on.
@@ -97,6 +93,10 @@ export const commitFilesFromBase64 = async ({
   if ("branch" in base && base.branch === branch) {
     log?.debug(`Committing to the same branch as base: ${branch} (${baseOid})`);
     // Get existing branch refId
+
+    if (!info.baseRef) {
+      throw new Error(`Ref ${baseRef} not found`);
+    }
     refId = info.baseRef.id;
   } else {
     // Determine if the branch needs to be created or not
