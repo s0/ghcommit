@@ -1,6 +1,6 @@
 {
   "name": "@s0/ghcommit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": false,
   "description": "Directly change files on github using the github API, to support GPG signing",
   "keywords": [
