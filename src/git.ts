@@ -87,6 +87,7 @@ export const commitChangesFromRepo = async ({
   return commitFilesFromBuffers({
     ...otherArgs,
     fileChanges,
+    log,
     base: {
       commit: oid,
     },
